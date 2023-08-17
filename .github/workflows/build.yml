@@ -1,0 +1,45 @@
+name: Build
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '11'
+
+      - name: Download and Install SonarQube Scanner
+        run: |
+          # Download the SonarQube Scanner zip package
+          Invoke-WebRequest -Uri https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472.zip -OutFile sonar-scanner.zip
+
+          # Extract the package
+          Expand-Archive -Path sonar-scanner.zip -DestinationPath $env:USERPROFILE\sonar-scanner
+
+      - name: Run SonarQube Scan
+        run: |
+          # Configure environment variables (adjust as needed)
+          $env:SONAR_TOKEN = $env:SONAR_TOKEN
+          $env:SONAR_HOST_URL = $env:SONAR_HOST_URL
+
+          # Run SonarQube Scanner
+          $env:PATH += ";$env:USERPROFILE\sonar-scanner\bin"
+          sonar-scanner -D"sonar.projectBaseDir=$(Get-Location)"
+
+      # If you wish to fail your job when the Quality Gate is red, uncomment the
+      # following lines. This would typically be used to fail a deployment.
+      # - name: Check SonarQube Quality Gate
+      #   run: |
+      #     # Check SonarQube Quality Gate status here
+
